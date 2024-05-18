@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+sqlalchemy
+asyncpg
+alembic
+fastapi-users[sqlalchemy]
+databases
+fastapi_localization
+pytest
+psycopg2
