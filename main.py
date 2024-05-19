@@ -8,7 +8,7 @@ from random import randint
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from fastapi import FastAPI, Depends
-from aioredis import Redis
+from redis import Redis
 
 import uuid
 from datetime import timedelta
@@ -39,7 +39,8 @@ def get_code():
 @app.post("/code/{uid}/")
 def code_is_valid(uid: str, code: int):
     code_ex = redis.get(uid)
-    if code_ex is not None and code_ex == str(code):
+    print(code_ex)
+    if code_ex is not None and code_ex.decode() == str(code):
         return {"success": "Поздравляю вы успешно зарегестрированы"}
     else:
         return {"error": "error"}
