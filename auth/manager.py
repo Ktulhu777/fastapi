@@ -3,6 +3,7 @@ from fastapi import Depends, Request
 from fastapi_users import BaseUserManager, IntegerIDMixin, exceptions, models, schemas
 from config import SECRET
 from auth.database import Users, get_user_db
+from auth.celery_worker import send_email
 
 SECRET = SECRET
 
@@ -43,6 +44,8 @@ class UserManager(IntegerIDMixin, BaseUserManager[Users, int]):
         created_user = await self.user_db.create(user_dict)
 
         await self.on_after_register(created_user, request)
+
+        send_email.delay(user_dict['username'])
 
         return created_user
 

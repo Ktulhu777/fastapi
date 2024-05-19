@@ -8,3 +8,7 @@ databases
 fastapi_localization
 pytest
 psycopg2
+celery
+fastapi-cache2[redis]
+aioredis
+flower
