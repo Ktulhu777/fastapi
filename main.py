@@ -2,25 +2,19 @@ from random import randint
 
 from auth.auth import auth_backend
 from auth.database import Users
-from auth.manager import get_user_manager
 from auth.schema import UserRead, UserCreate
+from auth.manager import fastapi_users, current_user
 
 import aioredis
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
-from fastapi import FastAPI
-from fastapi_users import FastAPIUsers
+from fastapi import FastAPI, Depends
 
 from redis import Redis
 import uuid
 from datetime import timedelta
 
-
-fastapi_users = FastAPIUsers[Users, int](
-    get_user_manager,
-    [auth_backend],
-)
-
+redis = Redis()
 app = FastAPI()
 app.include_router(
     fastapi_users.get_auth_router(auth_backend),
@@ -33,8 +27,6 @@ app.include_router(
     prefix="/auth",
     tags=["auth"],
 )
-
-redis = Redis()
 
 
 @app.get("/code/")
@@ -60,6 +52,11 @@ def uuid_is_valid(uid: str):
         return {"Введите код": 'fsd'}
     else:
         return {"error": "error"}
+
+
+@app.get("/users/me/")
+def protected_route(user: Users = Depends(current_user)):
+    return f"Hello, {user.username}"
 
 
 @app.on_event('startup')

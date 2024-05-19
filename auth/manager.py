@@ -1,9 +1,11 @@
-from typing import Optional
+from typing import Optional, Union
 from fastapi import Depends, Request
-from fastapi_users import BaseUserManager, IntegerIDMixin, exceptions, models, schemas
+from fastapi_users import BaseUserManager, IntegerIDMixin, exceptions, models, schemas, FastAPIUsers
+
+from auth.auth import auth_backend
 from config import SECRET
 from auth.database import Users, get_user_db
-from auth.celery_worker import send_email
+from auth.schema import password_validate
 
 SECRET = SECRET
 
@@ -11,6 +13,10 @@ SECRET = SECRET
 class UserManager(IntegerIDMixin, BaseUserManager[Users, int]):
     reset_password_token_secret = SECRET
     verification_token_secret = SECRET
+
+    async def validate_password(self, password: str, user: Union[schemas.UC, models.UP]) -> None:
+        if not password_validate.validate(password):
+            raise ValueError("Пароль должен содержать латинские буквы, цифры и спец.символы")
 
     async def on_after_register(self, user: Users, request: Optional[Request] = None):
         print(f"User {user.username} has registered.")
@@ -37,18 +43,27 @@ class UserManager(IntegerIDMixin, BaseUserManager[Users, int]):
             if safe
             else user_create.create_update_dict_superuser()
         )
+
         password = user_dict.pop("password")
         user_dict["hashed_password"] = self.password_helper.hash(password)
-        user_dict["is_active"] = False
+        # user_dict["is_active"] = False
 
         created_user = await self.user_db.create(user_dict)
 
         await self.on_after_register(created_user, request)
 
-        send_email.delay(user_dict['username'])
+        # send_email.delay(user_dict['username'])
 
         return created_user
 
 
 async def get_user_manager(user_db=Depends(get_user_db)):
     yield UserManager(user_db)
+
+
+fastapi_users = FastAPIUsers[Users, int](
+    get_user_manager,
+    [auth_backend],
+)
+
+current_user = fastapi_users.current_user()

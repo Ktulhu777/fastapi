@@ -12,3 +12,4 @@ celery
 fastapi-cache2[redis]
 aioredis
 flower
+password-validator
