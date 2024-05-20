@@ -1,11 +1,10 @@
 from typing import Optional, Union
-from fastapi import Depends, Request
-from fastapi_users import BaseUserManager, IntegerIDMixin, exceptions, models, schemas, FastAPIUsers
+from fastapi import Request
+from fastapi_users import BaseUserManager, IntegerIDMixin, exceptions, models, schemas
 
-from auth.auth import auth_backend
-from config import SECRET
-from auth.database import Users, get_user_db
+from auth.database import Users
 from auth.schema import password_validate
+from config import SECRET
 
 SECRET = SECRET
 
@@ -46,24 +45,9 @@ class UserManager(IntegerIDMixin, BaseUserManager[Users, int]):
 
         password = user_dict.pop("password")
         user_dict["hashed_password"] = self.password_helper.hash(password)
-        # user_dict["is_active"] = False
 
         created_user = await self.user_db.create(user_dict)
 
         await self.on_after_register(created_user, request)
 
-        # send_email.delay(user_dict['username'])
-
         return created_user
-
-
-async def get_user_manager(user_db=Depends(get_user_db)):
-    yield UserManager(user_db)
-
-
-fastapi_users = FastAPIUsers[Users, int](
-    get_user_manager,
-    [auth_backend],
-)
-
-current_user = fastapi_users.current_user()
