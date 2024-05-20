@@ -1,5 +1,5 @@
 from typing import Optional, Union
-from fastapi import Request
+from fastapi import Request, HTTPException
 from fastapi_users import BaseUserManager, IntegerIDMixin, exceptions, models, schemas
 
 from auth.database import Users
@@ -15,7 +15,7 @@ class UserManager(IntegerIDMixin, BaseUserManager[Users, int]):
 
     async def validate_password(self, password: str, user: Union[schemas.UC, models.UP]) -> None:
         if not password_validate.validate(password):
-            raise ValueError("Пароль должен содержать латинские буквы, цифры и спец.символы")
+            raise HTTPException(status_code=400, detail="Пароль должен содержать латинские буквы, цифры и спец.символы")
 
     async def on_after_register(self, user: Users, request: Optional[Request] = None):
         print(f"User {user.username} has registered.")

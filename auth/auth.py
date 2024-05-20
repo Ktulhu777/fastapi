@@ -1,12 +1,14 @@
 from fastapi_users import FastAPIUsers
 from fastapi_users.authentication import CookieTransport, AuthenticationBackend
 from fastapi_users.authentication import JWTStrategy
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from auth import service
 from auth.manager import UserManager
 from config import SECRET
 from auth.schema import UserRead
-from auth.database import Users, get_user_db
+from auth.database import Users, get_user_db, get_async_session
 from auth.celery_worker import send_email, redis
 
 cookie_transport = CookieTransport(cookie_name='tur', cookie_max_age=3600 * 12)
@@ -43,19 +45,22 @@ def protected_route(user: Users = Depends(current_user)):
     return user
 
 
-@authAPI.post("/activation-email/")
+@authAPI.post("/activation-email/", status_code=200)
 def activation_user_email(user: Users = Depends(current_verified_user)):
     send_email.delay(user.username, user.email)
     return {"success": "Код успешно отправлен"}
 
 
-@authAPI.post("/code/")
-def code_is_valid(code: int, user: Users = Depends(current_verified_user)):
+@authAPI.post("/code/", status_code=200)
+async def code_is_valid(code: int,
+                        user: Users = Depends(current_verified_user),
+                        session: AsyncSession = Depends(get_async_session)):
     username = user.username
     code_example = redis.get(username)
+
     if code_example is not None and code_example.decode() == str(code):
-        user.is_verified = True
+        await service.update_is_verified(username=username, session=session)
         redis.delete(username)
-        return {"success": "Поздравляю вы успешно зарегистрированы"}
+        return {"success": "Поздравляю! Вы успешно подтвердили почту."}
     else:
-        return {"error": "Что-то пошло не так"}
+        raise HTTPException(status_code=400, detail="Подтверждение не прошло.")
