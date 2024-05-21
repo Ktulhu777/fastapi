@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 from fastapi_users import schemas
 from typing import Optional
 from pydantic import EmailStr, validator
@@ -31,14 +32,15 @@ class UserCreate(schemas.BaseUserCreate):
 
 
 class UserUpdate(schemas.BaseUserUpdate):
-    id: int
-    password: Optional[str] = None
+    username: str = None
     email: Optional[EmailStr] = None
-    is_active: bool = False
+
+    def __getitem__(self, item):
+        return item
 
     @validator('password')
     @classmethod
     def validate_password(cls, value):
         if not password_validate.validate(value):
-            raise ValueError("Пароль должен содержать латинские буквы, цифры и спец.символы")
+            raise HTTPException(status_code=400, detail="Пароль должен содержать латинские буквы, цифры и спец.символы")
         return value

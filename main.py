@@ -1,3 +1,5 @@
+import uvicorn
+
 from auth import auth
 from auth.schema import UserRead, UserCreate
 from auth.auth import fastapi_users
@@ -30,3 +32,7 @@ app.include_router(
 async def startup_event():
     redis = aioredis.from_url('redis://localhost')
     FastAPICache.init(RedisBackend(redis=redis), prefix='fastapi-cache')
+
+
+if __name__ == '__main__':
+    uvicorn.run('main:app', reload=True)

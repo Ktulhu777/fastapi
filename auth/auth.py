@@ -3,11 +3,12 @@ from fastapi_users.authentication import CookieTransport, AuthenticationBackend
 from fastapi_users.authentication import JWTStrategy
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Annotated
 
-from auth import service
+from . import service
 from auth.manager import UserManager
 from config import SECRET
-from auth.schema import UserRead
+from .schema import UserRead, UserUpdate
 from auth.database import Users, get_user_db, get_async_session
 from auth.celery_worker import send_email, redis
 
@@ -41,8 +42,21 @@ authAPI = APIRouter()
 
 
 @authAPI.get("/users/me/", response_model=UserRead)
-def protected_route(user: Users = Depends(current_user)):
+def profile_user(user: Users = Depends(current_user)):
     return user
+
+
+@authAPI.put("/users/me/")
+async def update_user(user_up: Annotated[UserUpdate, Depends()],
+                      user: Users = Depends(current_user),
+                      session: AsyncSession = Depends(get_async_session)):
+
+    field = ['username', 'email', 'password']
+    data_up = {item: getattr(user_up, item) for item in field if getattr(user_up, item) is not None}
+    await service.update_user(username_search=user.username,
+                              session=session,
+                              **data_up)
+    return {"success": "Данные успешно обновлены."}
 
 
 @authAPI.post("/activation-email/", status_code=200)

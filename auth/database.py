@@ -19,7 +19,7 @@ class Users(SQLAlchemyBaseUserTable[int], Base):
     id: int = Column(Integer, primary_key=True)
     username: str = Column(String, nullable=True, unique=True)
     register_data: datetime.utcnow = Column(TIMESTAMP, default=datetime.utcnow())
-    email: Mapped[str] = mapped_column(String(length=320), unique=True, index=True, nullable=False)
+    email: Mapped[str] = mapped_column(String(length=320), unique=True, index=True, nullable=True)
     hashed_password: Mapped[str] = mapped_column(String(length=1024), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     is_superuser: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
