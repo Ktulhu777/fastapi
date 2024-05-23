@@ -8,11 +8,12 @@ from typing import Annotated
 from . import service
 from .manager import UserManager
 from config import SECRET
-from .schema import UserRead, UserUpdate
+from .schema import UserRead, UserUpdate, ChangePasswdUser
 from .database import Users, get_user_db, get_async_session
-from .celery_worker import send_email, redis
+from .celery_worker import send_email, redis, redis_2
 
 cookie_transport = CookieTransport(cookie_name='tur', cookie_max_age=3600 * 12)
+validate_password = service.ValidateChangePassword()
 
 
 def get_jwt_strategy() -> JWTStrategy:
@@ -50,7 +51,6 @@ def profile_user(user: Users = Depends(current_user)):
 async def update_user(user_up: Annotated[UserUpdate, Depends()],
                       user: Users = Depends(current_user),
                       session: AsyncSession = Depends(get_async_session)):
-
     field = ('username', 'email')
     data_up = {item: getattr(user_up, item) for item in field if getattr(user_up, item) is not None}
     await service.update_user(username_search=user.username,
@@ -78,3 +78,22 @@ async def code_is_valid(code: int,
         return {"success": "Поздравляю! Вы успешно подтвердили почту."}
     else:
         raise HTTPException(status_code=400, detail="Подтверждение не прошло.")
+
+
+@authAPI.patch("/change-password/")
+async def change_password(password: Annotated[ChangePasswdUser, Depends()],
+                          user: Users = Depends(current_user),
+                          session: AsyncSession = Depends(get_async_session)):
+    code = redis_2.get(user.email)
+    if code is not None and code.decode() == str(password.code):
+        if validate_password(password_1=password.new_password, password_2=password.reply_new_password):
+            await service.update_password(username=user.username, session=session, password=password.new_password)
+            redis.delete(user.email)
+            return {"success": "Пароль изменен."}
+    raise HTTPException(status_code=404, detail="Пароль не был изменен")
+
+
+@authAPI.post("/code-password/")
+def send_code_change_password(user: Users = Depends(current_user)):
+    send_email.delay(user.username, user.email, True)
+    return {"success": "Код отправлен на вашу почту."}

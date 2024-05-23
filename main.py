@@ -1,9 +1,8 @@
-import uvicorn
-
 from auth import auth
 from auth.schema import UserRead, UserCreate
 from auth.auth import fastapi_users
 
+import uvicorn
 import aioredis
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
@@ -20,6 +19,7 @@ app.include_router(
     prefix="/auth/jwt",
     tags=["auth"],
 )
+
 
 app.include_router(
     fastapi_users.get_register_router(UserRead, UserCreate),

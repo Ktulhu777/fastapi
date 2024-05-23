@@ -3,8 +3,8 @@ from fastapi import Request, HTTPException
 from fastapi_users import BaseUserManager, IntegerIDMixin, exceptions, models, schemas
 
 from .database import Users
-from .schema import password_validate
 from config import SECRET
+from .service import password_validate
 
 SECRET = SECRET
 

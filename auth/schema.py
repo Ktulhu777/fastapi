@@ -1,15 +1,7 @@
 from fastapi_users import schemas
 from typing import Optional
-from pydantic import EmailStr
-from password_validator import PasswordValidator
-
-password_validate = PasswordValidator()
-
-password_validate \
-    .min(8) \
-    .has().digits() \
-    .has().letters() \
-    .has().symbols()
+from pydantic import EmailStr, BaseModel
+from fastapi_users.password import PasswordHelper
 
 
 class UserRead(schemas.BaseUser[int]):
@@ -36,6 +28,12 @@ class UserUpdate(schemas.BaseUserUpdate):
 
     def __getitem__(self, item):
         return item
+
+
+class ChangePasswdUser(BaseModel):
+    code: int
+    new_password: str
+    reply_new_password: str
 
     # @validator('password')
     # @classmethod
