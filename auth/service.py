@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from auth.database import Users
+from .database import Users
 
 
 async def update_is_verified(username: str,

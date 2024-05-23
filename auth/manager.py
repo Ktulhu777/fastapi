@@ -2,8 +2,8 @@ from typing import Optional, Union
 from fastapi import Request, HTTPException
 from fastapi_users import BaseUserManager, IntegerIDMixin, exceptions, models, schemas
 
-from auth.database import Users
-from auth.schema import password_validate
+from .database import Users
+from .schema import password_validate
 from config import SECRET
 
 SECRET = SECRET

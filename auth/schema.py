@@ -1,7 +1,6 @@
-from fastapi import HTTPException
 from fastapi_users import schemas
 from typing import Optional
-from pydantic import EmailStr, validator
+from pydantic import EmailStr
 from password_validator import PasswordValidator
 
 password_validate = PasswordValidator()

@@ -6,11 +6,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
 
 from . import service
-from auth.manager import UserManager
+from .manager import UserManager
 from config import SECRET
 from .schema import UserRead, UserUpdate
-from auth.database import Users, get_user_db, get_async_session
-from auth.celery_worker import send_email, redis
+from .database import Users, get_user_db, get_async_session
+from .celery_worker import send_email, redis
 
 cookie_transport = CookieTransport(cookie_name='tur', cookie_max_age=3600 * 12)
 
