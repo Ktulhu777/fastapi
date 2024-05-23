@@ -51,7 +51,7 @@ async def update_user(user_up: Annotated[UserUpdate, Depends()],
                       user: Users = Depends(current_user),
                       session: AsyncSession = Depends(get_async_session)):
 
-    field = ['username', 'email', 'password']
+    field = ('username', 'email')
     data_up = {item: getattr(user_up, item) for item in field if getattr(user_up, item) is not None}
     await service.update_user(username_search=user.username,
                               session=session,

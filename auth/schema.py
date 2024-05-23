@@ -38,9 +38,9 @@ class UserUpdate(schemas.BaseUserUpdate):
     def __getitem__(self, item):
         return item
 
-    @validator('password')
-    @classmethod
-    def validate_password(cls, value):
-        if not password_validate.validate(value):
-            raise HTTPException(status_code=400, detail="Пароль должен содержать латинские буквы, цифры и спец.символы")
-        return value
+    # @validator('password')
+    # @classmethod
+    # def validate_password(cls, value):
+    #     if not password_validate.validate(value):
+    #         raise HTTPException(status_code=400, detail="Пароль должен содержать латинские буквы, цифры и спец.символы")
+    #     return value
