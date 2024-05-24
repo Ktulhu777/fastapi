@@ -1,7 +1,6 @@
 from fastapi_users import schemas
 from typing import Optional
 from pydantic import EmailStr, BaseModel
-from fastapi_users.password import PasswordHelper
 
 
 class UserRead(schemas.BaseUser[int]):
